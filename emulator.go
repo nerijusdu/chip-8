@@ -28,6 +28,7 @@ var font []byte = []byte{
 	0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 }
 
+// TODO:
 // Keypad
 // 1 	2 	3 	C
 // 4 	5 	6 	D
@@ -107,6 +108,7 @@ func Execute(opcode uint16) {
 			instructions.ClearScreen(data)
 			break
 		case 0x00EE:
+			instructions.ReturnFromSubroutine(data)
 			break
 		}
 
@@ -115,12 +117,16 @@ func Execute(opcode uint16) {
 		instructions.Jump(data, nnn)
 		break
 	case 0x2000:
+		instructions.StartSubroutine(data, nnn)
 		break
 	case 0x3000:
+		instructions.SkipIfEqual(data, x, nn)
 		break
 	case 0x4000:
+		instructions.SkipIfEqual(data, x, nn, false)
 		break
 	case 0x5000:
+		instructions.SkipIfEqualRegisters(data, x, y)
 		break
 	case 0x6000:
 		instructions.SetRegister(data, x, nn)
@@ -129,68 +135,88 @@ func Execute(opcode uint16) {
 		instructions.AddValueToRegister(data, x, nn)
 		break
 	case 0x8000:
-		switch opcode & 0xF {
-		case 0x0:
+		switch opcode & 0x000F {
+		case 0x0000:
+			data.Registers[x] = data.Registers[y]
 			break
-		case 0x1:
+		case 0x0001:
+			data.Registers[x] = data.Registers[x] | data.Registers[y]
 			break
-		case 0x2:
+		case 0x0002:
+			data.Registers[x] = data.Registers[x] & data.Registers[y]
 			break
-		case 0x3:
+		case 0x0003:
+			data.Registers[x] = data.Registers[x] ^ data.Registers[y]
 			break
-		case 0x4:
+		case 0x0004:
+			instructions.AddWithCarry(data, x, y)
 			break
-		case 0x5:
+		case 0x0005:
+			instructions.SubtractWithCarry(data, x, x, y)
 			break
-		case 0x6:
+		case 0x0006:
+			instructions.ShiftRight(data, x)
 			break
-		case 0x7:
+		case 0x0007:
+			instructions.SubtractWithCarry(data, x, y, x)
 			break
-		case 0xE:
+		case 0x000E:
+			instructions.ShiftLeft(data, x)
 			break
 		}
 
 		break
 	case 0x9000:
+		instructions.SkipIfEqualRegisters(data, x, y, false)
 		break
 	case 0xA000:
 		instructions.SetIndexRegister(data, nnn)
 		break
 	case 0xB000:
+		instructions.JumpWithOffset(data, nnn)
 		break
 	case 0xC000:
+		instructions.Random(data, x, nn)
 		break
 	case 0xD000:
 		instructions.DisplayDraw(data, x, y, n)
 		break
 	case 0xE000:
-		switch opcode & 0xFF {
-		case 0x9E:
+		switch opcode & 0x00FF {
+		case 0x009E:
 			break
-		case 0xA1:
+		case 0x00A1:
 			break
 		}
 
 		break
 	case 0xF000:
 		switch opcode & 0xFF {
-		case 0x07:
+		case 0x0007:
+			data.Registers[x] = data.DelayTimer
 			break
-		case 0x0A:
+		case 0x000A:
 			break
-		case 0x15:
+		case 0x0015:
+			data.DelayTimer = data.Registers[x]
 			break
-		case 0x18:
+		case 0x0018:
+			data.SoundTimer = data.Registers[x]
 			break
-		case 0x1E:
+		case 0x001E:
+			data.I += uint16(data.Registers[x])
 			break
-		case 0x29:
+		case 0x0029:
+			data.I = uint16(data.Registers[x]) * uint16(0x05)
 			break
-		case 0x33:
+		case 0x0033:
+			instructions.DecimalConversion(data, x)
 			break
-		case 0x55:
+		case 0x0055:
+			instructions.StoreMemory(data, x)
 			break
-		case 0x65:
+		case 0x0065:
+			instructions.LoadMemory(data, x)
 			break
 		}
 

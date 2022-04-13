@@ -1,6 +1,7 @@
 package instructions
 
 import (
+	"chip8/helpers"
 	. "chip8/models"
 	"fmt"
 	"math/rand"
@@ -151,18 +152,38 @@ func Random(data *GameData, x uint16, nn byte) {
 func DecimalConversion(data *GameData, x uint16) {
 	vx := data.Registers[x]
 	data.Memory[data.I] = vx / 100
-	data.Memory[data.I+1] = (vx / 10) % 10
-	data.Memory[data.I+2] = (vx % 100) % 10
+	data.Memory[data.I+1] = (vx % 100) / 10
+	data.Memory[data.I+2] = vx % 10
 }
 
 func StoreMemory(data *GameData, x uint16) {
-	for i := 0; i < int(x); i++ {
+	for i := 0; i <= int(x); i++ {
 		data.Memory[data.I+uint16(i)] = data.Registers[i]
 	}
 }
 
 func LoadMemory(data *GameData, x uint16) {
-	for i := 0; i < int(x); i++ {
+	for i := 0; i <= int(x); i++ {
 		data.Registers[i] = data.Memory[data.I+uint16(i)]
+	}
+}
+
+func SkipIfKeyPressed(data *GameData, x uint16, key string, isEqualOptional ...bool) {
+	isEqual := true
+	if len(isEqualOptional) > 0 {
+		isEqual = isEqualOptional[0]
+	}
+
+	result := data.Registers[x] == helpers.GetKey(key)
+	if key != "" && result == isEqual {
+		Skip(data)
+	}
+}
+
+func WaitForKey(data *GameData, x uint16, key string) {
+	if key != "" {
+		SetRegister(data, x, helpers.GetKey(key))
+	} else {
+		data.PC -= 2
 	}
 }

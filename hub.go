@@ -25,7 +25,7 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) run(onConnect func()) {
+func (h *Hub) run(onConnect func(), messages chan<- string) {
 	for {
 		select {
 		case client := <-h.register:
@@ -37,14 +37,7 @@ func (h *Hub) run(onConnect func()) {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
-				}
-			}
+			messages <- string(message)
 		}
 	}
 }

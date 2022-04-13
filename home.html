@@ -4,8 +4,8 @@
 <head>
   <title>Chip-8</title>
   <script type="text/javascript">
+    let conn;
     window.onload = function () {
-      let conn;
       const display = document.getElementById("display");
       const displayWidth = 64;
       const displayHeight = 32;
@@ -53,6 +53,10 @@
         display.innerHTML = "<b>Your browser does not support WebSockets.</b>";
       }
     };
+
+    const onClick = (key) => {
+      conn?.send(key.toString());
+    }
   </script>
   <style type="text/css">
     html {
@@ -78,11 +82,53 @@
       margin: 0;
       padding: 0;
     }
+
+    #keypad {
+      margin-left: 20px;
+      margin-top: 20px;
+    }
+
+    #keypad>button {
+      width: 50px;
+      height: 50px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      margin-bottom: 3px;
+      background: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #keypad>button:hover {
+      background: #f0f0f0;
+    }
   </style>
 </head>
 
 <body>
   <div id="display"></div>
+  <div id="keypad">
+    <button onclick="onClick(1)">1</button>
+    <button onclick="onClick(2)">2</button>
+    <button onclick="onClick(3)">3</button>
+    <button onclick="onClick('C')">C</button>
+    <br />
+    <button onclick="onClick(4)">4</button>
+    <button onclick="onClick(5)">5</button>
+    <button onclick="onClick(6)">6</button>
+    <button onclick="onClick('D')">D</button>
+    <br />
+    <button onclick="onClick(7)">7</button>
+    <button onclick="onClick(8)">8</button>
+    <button onclick="onClick(9)">9</button>
+    <button onclick="onClick('E')">E</button>
+    <br />
+    <button onclick="onClick('A')">A</button>
+    <button onclick="onClick(0)">0</button>
+    <button onclick="onClick('B')">B</button>
+    <button onclick="onClick('F')">F</button>
+  </div>
 </body>
 
 </html>

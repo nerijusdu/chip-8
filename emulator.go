@@ -5,6 +5,7 @@ import (
 	"chip8/instructions"
 	. "chip8/models"
 	"encoding/binary"
+	"fmt"
 	"os"
 	"time"
 )
@@ -73,18 +74,28 @@ func Init() *GameData {
 }
 
 func ReadFile() []byte {
-	dat, err := os.ReadFile("roms/IBM Logo.ch8")
+	dat, err := os.ReadFile("roms/keypad_test.ch8")
 	check(err)
 
 	return dat
 }
 
-func GameLoop(refresh func()) {
+func GameLoop(refresh func(), messages <-chan string) {
 	cycles := 0
 	for {
+		key := ""
+		select {
+		case key = <-messages:
+			break
+		default:
+			key = ""
+			break
+		}
+
 		opcode := binary.BigEndian.Uint16([]byte{data.Memory[data.PC], data.Memory[data.PC+1]})
+		fmt.Println("Key:", key, data.PC, fmt.Sprintf("%X", opcode)) // TODO: keypad only registers first key
 		data.PC += 2
-		Execute(opcode)
+		Execute(opcode, key)
 
 		data.UpdateTimers()
 
@@ -94,7 +105,7 @@ func GameLoop(refresh func()) {
 	}
 }
 
-func Execute(opcode uint16) {
+func Execute(opcode uint16, key string) {
 	x := (opcode & 0x0F00) >> 8
 	y := (opcode & 0x00F0) >> 4
 	nnn := opcode & 0x0FFF
@@ -184,8 +195,10 @@ func Execute(opcode uint16) {
 	case 0xE000:
 		switch opcode & 0x00FF {
 		case 0x009E:
+			instructions.SkipIfKeyPressed(data, x, key)
 			break
 		case 0x00A1:
+			instructions.SkipIfKeyPressed(data, x, key, false)
 			break
 		}
 
@@ -196,6 +209,7 @@ func Execute(opcode uint16) {
 			data.Registers[x] = data.DelayTimer
 			break
 		case 0x000A:
+			instructions.WaitForKey(data, x, key)
 			break
 		case 0x0015:
 			data.DelayTimer = data.Registers[x]

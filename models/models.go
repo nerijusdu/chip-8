@@ -22,20 +22,28 @@ func (gameData *GameData) UpdateTimers() {
 	}
 }
 
-type Stack []uint16
+type Stack struct {
+	data []uint16
+}
+
+func NewStack(len int) *Stack {
+	return &Stack{
+		data: make([]uint16, len),
+	}
+}
 
 func (s *Stack) IsEmpty() bool {
-	return len(*s) == 0
+	return len(s.data) == 0
 }
 
 func (s *Stack) Push(data uint16) {
-	*s = append(*s, data)
+	s.data = append(s.data, data)
 }
 
 func (s *Stack) Pop() uint16 {
-	index := len(*s) - 1
-	element := (*s)[index]
-	*s = (*s)[:index]
+	index := len(s.data) - 1
+	element := s.data[index]
+	s.data = s.data[:index]
 	return element
 }
 

@@ -182,6 +182,7 @@ func SkipIfKeyPressed(data *GameData, x uint16, key string, isEqualOptional ...b
 
 func WaitForKey(data *GameData, x uint16, key string) {
 	if key != "" {
+		fmt.Println("Key was pressed")
 		SetRegister(data, x, helpers.GetKey(key))
 	} else {
 		data.PC -= 2

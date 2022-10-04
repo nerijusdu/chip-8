@@ -1,6 +1,10 @@
 package helpers
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+	"time"
+)
 
 func GetByteFrom16(x uint16) byte {
 	temp := make([]byte, 2)
@@ -50,4 +54,24 @@ func GetKey(key string) byte {
 		return 0xF
 	}
 	return 0
+}
+
+func Schedule(d time.Duration, fn func()) func() {
+	fmt.Println(d)
+	ticker := time.NewTicker(d)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				fn()
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	return func() {
+		close(quit)
+	}
 }

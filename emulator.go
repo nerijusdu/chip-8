@@ -29,12 +29,7 @@ var font []byte = []byte{
 	0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 }
 
-// TODO:
-// Keypad
-// 1 	2 	3 	C
-// 4 	5 	6 	D
-// 7 	8 	9 	E
-// A 	0 	B 	F
+// TODO: investigate if font is rendered correctly
 
 const pixelCount = 64 * 32
 const clockSpeed = 700
@@ -50,7 +45,7 @@ func check(e error) {
 func Init() *GameData {
 	data = &GameData{
 		Pixels:     make(Pixels, pixelCount),
-		Stack:      make(Stack, 100),
+		Stack:      *NewStack(0),
 		Registers:  make([]byte, 16),
 		Memory:     make([]byte, 4096),
 		DelayTimer: 255,
@@ -81,11 +76,16 @@ func ReadFile() []byte {
 }
 
 func GameLoop(refresh func(), messages <-chan string) {
+	helpers.Schedule(time.Duration(500)*time.Millisecond, refresh)
+	helpers.Schedule(time.Duration(1000000/60)*time.Microsecond, data.UpdateTimers) // 60hz
+	waitTime := time.Duration(1000000/clockSpeed) * time.Microsecond                // 700hz
 	cycles := 0
+
 	for {
 		key := ""
 		select {
 		case key = <-messages:
+			fmt.Printf("-------Key is pressed %s\n", key)
 			break
 		default:
 			key = ""
@@ -93,15 +93,12 @@ func GameLoop(refresh func(), messages <-chan string) {
 		}
 
 		opcode := binary.BigEndian.Uint16([]byte{data.Memory[data.PC], data.Memory[data.PC+1]})
-		fmt.Println("Key:", key, data.PC, fmt.Sprintf("%X", opcode)) // TODO: keypad only registers first key
+		// fmt.Println("Key:", key, data.PC, fmt.Sprintf("%X", opcode)) // TODO: keypad only registers first key
 		data.PC += 2
 		Execute(opcode, key)
 
-		data.UpdateTimers()
-
-		refresh()
 		cycles++
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(waitTime)
 	}
 }
 
